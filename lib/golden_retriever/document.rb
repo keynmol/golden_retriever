@@ -16,8 +16,18 @@ module GoldenRetriever
 				field field_name.to_sym, type: Array
 				field ("weighted_"+field_name).to_sym, type: Hash
 
-				self.send(:define_method, (field_name+"_source=").to_sym) {|str|self.send("#{field_name}=".to_sym, tokenize(prepare_text(str))); super(str)}
+				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
+					self.send("#{field_name}=".to_sym, tokenize(prepare_text(str)).map{|w| stem(w)}) 
+					super(str)
+				}
 			}
+		end
+
+		def self.stem(word)
+			@__stemmer.nil? ? word : @__stemmer.stem(word)
+		end
+		def stem(word)
+			self.class.stem(word)
 		end
 
 		def self.tokenize(str)
@@ -48,6 +58,14 @@ module GoldenRetriever
 				d.send("#{k}=".to_sym,v)
 			}
 			d
+		end
+
+		def self.stemming(type, options={})
+			@__stemmer="GoldenRetriever::Stemmers::#{type.to_s.camelize}".constantize.new(options)
+
+			if options[:keep_forms]
+				@__stemming_keep_forms=true
+			end
 		end
 
 		def self.conversion(type, options={})

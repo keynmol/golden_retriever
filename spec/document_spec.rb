@@ -33,7 +33,7 @@ describe GoldenRetriever::Document do
 
 	it "should change case of the text with respect to unicode characters" do
 		@article_class_downcased=@article_class.clone
-		
+
 		@article_class_downcased.class_exec {
 			conversion :change_case, :direction => :down
 			word_token /([а-яА-Я\-]{3,})/i
@@ -41,6 +41,31 @@ describe GoldenRetriever::Document do
 
 		d=@article_class_downcased.from_source(:text => "ТесТОВый теКст С Разными РегиСТРАМИ")
 		d.text.should eql(["тестовый","текст","разными","регистрами"])
+	end
+
+	it "should not stem if stemming is not specified" do
+		d=@article_class.from_source(:text=>"words of words of words of thunders")
+
+		d.text.should eql(["words","words","words","thunders"])
+	end
+
+	it "should stem if any stemmer is specified" do
+		@article_class_stemmed=@article_class.clone
+		
+		@article_class_stemmed.class_exec {
+			stemming :porter, language: "en"
+		}
+		d=@article_class_stemmed.from_source(:text=>"words of thunderous stemming abilities")
+		d.text.should eql(["word","thunder","stem","abil"])
+
+		@article_class_stemmed.class_exec {
+			stemming :porter, language: "ru"
+			word_token /([а-яА-Я\-]{3,})/i
+
+		}
+		d=@article_class_stemmed.from_source(:text=>"слова русского языка с трудом поддаются стеммингу")
+		d.text.should eql(["слов", "русск", "язык", "труд", "подда", "стемминг"])
+
 	end
 
 	it "should allow creating itself from source" do
