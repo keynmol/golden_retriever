@@ -1,4 +1,5 @@
 require 'mongoid'
+require 'active_support/inflections'
 
 module GoldenRetriever
 	class Document
@@ -15,8 +16,7 @@ module GoldenRetriever
 				field field_name.to_sym, type: Array
 				field ("weighted_"+field_name).to_sym, type: Hash
 
-				# define_method((field_name+"_source=").to_sym) {}
-				self.send(:define_method, (field_name+"_source=").to_sym) {|str| self.send("#{field_name}=".to_sym, tokenize(str)); super(str)}
+				self.send(:define_method, (field_name+"_source=").to_sym) {|str|self.send("#{field_name}=".to_sym, tokenize(prepare_text(str))); super(str)}
 			}
 		end
 
@@ -28,18 +28,32 @@ module GoldenRetriever
 			self.class.tokenize(str)
 		end
 
+		def prepare_text(str)
+			self.class.prepare_text(str)
+		end
+
+		def self.prepare_text(str)
+			@__conversions.nil? ? str : @__conversions.reduce(str){|memo,obj| memo=obj.convert(memo)}
+		end
+
 		def self.word_token(regex)
 			@__tokenizer=Tokenizers::RegexTokenizer.new(regex)
 		end
 
 		def self.from_source(values)
-			values=Hash[@__textual_fields.collect {|field_name| [(field_name.to_s+"_source").to_sym, values[field_name]]}]
-
-			d=self.new
-			values.each {|k,v|
+			non_textual_values=values.select{|k,v| ! @__textual_fields.include?(k)}
+			d=self.new(non_textual_values)
+			textual_values=Hash[(values.keys.map(&:to_sym) & @__textual_fields).collect {|field_name| [(field_name.to_s+"_source").to_sym, values[field_name]]}]
+			textual_values.each {|k,v|
 				d.send("#{k}=".to_sym,v)
 			}
 			d
+		end
+
+		def self.conversion(type, options={})
+			conversion_class="GoldenRetriever::TextConversions::#{type.to_s.camelize}".constantize
+			@__conversions||=[]
+			@__conversions<<conversion_class.new(options)
 		end
 
 		def words

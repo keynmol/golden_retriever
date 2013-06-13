@@ -25,10 +25,22 @@ describe GoldenRetriever::Document do
 		d.title.should eql(["Article","title"])
 	end
 
-	it "should change case of the text with respect to unicode characters" do
-		d=@article_class.from_source(:text => "ТесТОВый теКст С Разными РегиСТРАМИ")
+	it "should create documents from partial data" do
+		d=@article_class.from_source(:text => "test data")
 
-		puts d.text
+		d.text_source.should eql("test data")
+	end
+
+	it "should change case of the text with respect to unicode characters" do
+		@article_class_downcased=@article_class.clone
+		
+		@article_class_downcased.class_exec {
+			conversion :change_case, :direction => :down
+			word_token /([а-яА-Я\-]{3,})/i
+		}
+
+		d=@article_class_downcased.from_source(:text => "ТесТОВый теКст С Разными РегиСТРАМИ")
+		d.text.should eql(["тестовый","текст","разными","регистрами"])
 	end
 
 	it "should allow creating itself from source" do
