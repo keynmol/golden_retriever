@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/keynmol/golden_retriever.png)](https://travis-ci.org/keynmol/golden_retriever)
 # GoldenRetriever
 
 TODO: Write a gem description
