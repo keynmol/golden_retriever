@@ -19,7 +19,20 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+	Mongoid.load!("mongoid.yml", "test")
+
+	class Article < GoldenRetriever::Document
+		textual :text, :title
+		conversion :change_case, :direction => :down
+		word_token /([a-zA-Z\-]{3,})/i
+	end
+
+	article=Article.from_source(text: "Now, to begin with, I know nothing about Lorem Ipsum. But that didn't stop me from writing this utterly horrible article. Evenmore - it won't stop you from reading and enjoying it", 
+								title: "On theoretical pecularities of Lorem Ipsum")
+
+	article.text
+	# => ["now", "begin", "with", "know", "nothing", "about", "lorem", "ipsum", "but", "that", "didn", "stop", "from", "writing", "this", "utterly", "horrible", "article", "evenmore", "won", "stop", "you", "from", "reading", "and", "enjoying"]
+
 
 ## Contributing
 
