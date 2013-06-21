@@ -5,6 +5,9 @@ module GoldenRetriever
 	class Document
 		include ::Mongoid::Document
 
+		field :__collection_id, type: String
+		field :weights
+
 		def self.textual_attributes
 			@__textual_fields
 		end
@@ -14,13 +17,21 @@ module GoldenRetriever
 				field_name=field_name.to_s
 				field (field_name+"_source").to_sym, type: String
 				field field_name.to_sym, type: Array
-				field ("weighted_"+field_name).to_sym, type: Hash
+				field (field_name+"_weights").to_sym, type: Hash
 
 				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
 					self.send("#{field_name}=".to_sym, tokenize(prepare_text(str)).map{|w| stem(w)}) 
 					super(str)
 				}
 			}
+		end
+
+		def self.id_field
+			:_id #TODO: generalize
+		end
+
+		def id
+			_id
 		end
 
 		def self.stem(word)
@@ -75,7 +86,11 @@ module GoldenRetriever
 		end
 
 		def words
-			self.class.textual_attributes.reduce([]){|memo, obj| memo+=self.send(obj.to_sym)}
+			self.class.textual_attributes.reduce([]){|memo, obj| memo+=self.send(obj.to_sym)}.uniq
+		end
+
+		def weight_of(word, field)
+			self.send("#{field}_weights",word)
 		end
 	end
 end
