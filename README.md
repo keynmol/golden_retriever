@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/keynmol/golden_retriever.png)](https://travis-ci.org/keynmol/golden_retriever)
 # GoldenRetriever
 
-TODO: Write a gem description
+A rather simple library for various experiments in information retrieval and data mining. Being oriented on text processing, it simplifies pre-processing offering tokenization, stemming, HTML tags removal.
 
 ## Installation
 
