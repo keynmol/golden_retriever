@@ -110,8 +110,6 @@ module GoldenRetriever
 				end
 
 				document.weights=weights
-
-
 				document.save
 			}
 		end
@@ -128,11 +126,14 @@ module GoldenRetriever
 					ds=docset_class.new(name: name, document_class: document_class, __collection_id: self._id, doclist: doclist.map(&:id))
 					ds.save
 					return ds
-				else 
+				else #TODO: check if all the ids are of the same allowed type
 					ds=docset_class.new(name: name, document_class: document_class, __collection_id: self._id, doclist: doclist)
 					ds.save
 					return ds
 				end
+			elsif doclist.is_a?(Mongoid::Criteria)
+				ids=doclist.map(&:id) #hopefully doesn't keep all instances in memory
+				create_docset(name,ids)
 			elsif block_given?
 				#TODO: empty docsets or not empty docsets?
 				selected_documents=documents.select {|d| yield d}.map &:id

@@ -11,7 +11,7 @@ describe GoldenRetriever::Docset do
 		
 		@collection.create_document(text: "Test word buttock maintenance", title: "Test title")
 		@collection.create_document(text: "Maintenace word immense value... value again!", title: "Other title")
-		@collection.create_document(text: "Maintenace word immense value... value again!", title: "Even more titles")
+		@collection.create_document(text: "How does anyone fill these in?", title: "Even more titles")
 
 
 
@@ -30,9 +30,14 @@ describe GoldenRetriever::Docset do
 		@docset.documents.count.should eql(3)
 	end
 
-	it "can be created from list of document ids" do
-		@docset=@collection.create_docset("Test docset", @collection.documents.map(&:id))
+	it "can be created from array of document objects" do
+		@docset=@collection.create_docset("Test docset", @collection.documents.entries)
 		@docset.documents.count.should eql(3)
+	end
+
+	it "can be created from a documents Enumerable" do
+		@docset=@collection.create_docset("Test docset", @collection.documents.where(text: /fill/))
+		@docset.documents.count.should eql(1)
 	end
 
 	it "can be created using a block selector" do
