@@ -14,7 +14,7 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency "rspec"
 
-  gem.add_dependency('mongoid')
+  gem.add_dependency('mongoid', '~>3.1.4')
   gem.add_dependency('activesupport')
   gem.add_dependency('unicode_utils')
   gem.add_dependency('ruby-stemmer')
