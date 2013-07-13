@@ -1,9 +1,11 @@
 require 'mongoid'
 require 'active_support/inflections'
+require "golden_retriever/shingler"
 
 module GoldenRetriever
 	class Document
 		include ::Mongoid::Document
+		include Shingler::Document
 
 		field :__collection_id, type: String
 		field :weights
@@ -86,7 +88,11 @@ module GoldenRetriever
 		end
 
 		def words
-			self.class.textual_attributes.reduce([]){|memo, obj| memo+=self.send(obj.to_sym)}.uniq
+			self.class.textual_attributes.reduce([]){|memo, obj| 
+					ar=self.send(obj.to_sym);
+					
+					memo=ar.nil? ? memo : memo+ar
+				}.uniq
 		end
 
 		def weight_of(word, field)

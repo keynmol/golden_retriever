@@ -87,8 +87,12 @@ module GoldenRetriever
 			end
 
 			def cosine_norm(weights)
-				norm=1/Math.sqrt(weights.values.map{|w| w*w}.inject(:+))
-				Hash[weights.map{|k,v| [k,v*norm]}]
+				if weights.size>0
+					norm=1/Math.sqrt(weights.values.map{|w| w*w}.inject(:+))
+					Hash[weights.map{|k,v| [k,v*norm]}]
+				else
+					{}
+				end
 			end
 
 			def none_norm(weights)
