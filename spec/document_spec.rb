@@ -14,7 +14,7 @@ describe GoldenRetriever::Document do
 	end
 
 	it "should save and return list of textual attributes for a class" do
-		@article_class.textual_attributes.should include(:text, :title)
+		@article_class.textual_attributes.should =~ [:text, :title]
 		@article_class.textual_attributes.length.should eql(2)
 	end
 
