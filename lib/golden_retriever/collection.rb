@@ -1,3 +1,5 @@
+require 'golden_retriever/vector_space'
+
 module GoldenRetriever
 	class Collection
 		include Mongoid::Document
@@ -98,19 +100,26 @@ module GoldenRetriever
 				partial_weights={}
 
 				document_class.textual_attributes.each {|attr|
-					attr_weights=weighting.weight(document.send(attr), freqs, documents.count)
-					document.send("#{attr}_weights=".to_sym, attr_weights)
-					weights.merge!(attr_weights)
-					attr_weights.keys.map {|w| words_to_merge[w]<<attr}
-					partial_weights[attr]=attr_weights
+					attr_words=document.send(attr)
+					if !attr_words.nil?
+						attr_weights=weighting.weight(attr_words, freqs, documents.count)
+						document.send("#{attr}_weights=".to_sym, attr_weights)
+						weights.merge!(attr_weights)
+						attr_weights.keys.map {|w| words_to_merge[w]<<attr}
+						partial_weights[attr]=attr_weights
+					else
+						document.send("#{attr}_weights=".to_sym, {})
+					end
 				}
 
 				if weighting_merging
-					words_to_merge.select{|k,v| v.length>1}.map {|w, attrs| weights[w]=weighting_merging.call(Hash[attrs.zip(attrs.collect {|attr| partial_weights[attr][w]})])}
+					words_to_merge.select{|k,v| v.length>1}
+									.map {|w, attrs| 
+										weights[w]=weighting_merging.call(Hash[attrs.zip(attrs.collect {|attr| partial_weights[attr][w]})])}
 				end
 
 				document.weights=weights
-				document.save
+				document.save 
 			}
 		end
 
@@ -118,6 +127,10 @@ module GoldenRetriever
 			d=document_class.from_source(*args)
 			add_document(d)
 			d
+		end
+
+		def vector_space(options={})
+			GoldenRetriever::VectorSpace.new(self,options)
 		end
 
 		def create_docset(name, doclist=nil)

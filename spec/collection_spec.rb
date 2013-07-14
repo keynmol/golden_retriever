@@ -56,4 +56,15 @@ describe GoldenRetriever::Collection do
 
 	end
 
+	it "should handle incomplete documents gracefully during weighting" do
+		@document_3=@collection.create_document(:title=> "Incomplete title")
+		expect { @collection.rehash }.to_not raise_error
+
+		@document_3.reload
+
+		@document_3.title_weights.should_not be_nil
+		@document_3.weights.should_not be_nil
+		@document_3.weights.keys.should =~ @document_3.words
+	end
+
 end
