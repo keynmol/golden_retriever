@@ -17,7 +17,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "guard-rspec"
 
 
-  gem.add_dependency('mongoid', '~>3.1.4')
+  gem.add_dependency('mongoid', '~>4.0.0.beta1')
   gem.add_dependency('activesupport')
   gem.add_dependency('unicode_utils')
   gem.add_dependency('ruby-stemmer')
