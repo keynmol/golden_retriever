@@ -55,7 +55,7 @@ module GoldenRetriever
 							when Proc then @words.map(&@prefix)
 							when String then @words.map {|w| @prefix+w}
 							end
-			words_columns+additional_fields
+			additional_fields+words_columns
 		end
 
 		def add_document_id?
@@ -89,8 +89,10 @@ module GoldenRetriever
 				}
 			}
 
-			if options[:file]
-				CSV.open(options[:file], "w", options, &csv_block)
+			filename=options.delete(:file)
+
+			if filename
+				CSV.open(filename, "w", options, &csv_block)
 			else
 				CSV.generate(options,&csv_block)
 			end
