@@ -11,6 +11,7 @@ describe GoldenRetriever::Document do
 		@source_text = "A text for testing, no more lorem ipsum bullcrap."
 		@source_title = "Article title"
 
+
 	end
 
 	it "should save and return list of textual attributes for a class" do
@@ -99,10 +100,10 @@ describe GoldenRetriever::Document do
 
 			end
 
-			def filter(text, instance)
+			def filter(words, instance, words_source)
 				new_text=[]
 				hashtags=[]
-				text.each { |word|
+				words.each { |word|
 					
 					if word.start_with?("#")
 						hashtags<<word[1..-1]
@@ -114,6 +115,7 @@ describe GoldenRetriever::Document do
 				new_text
 			end
 		}
+
 		@article_class_custom_filter=@article_class.clone
 		@article_class_custom_filter.class_exec{
 			word_token /([a-zA-Z\-]{3,}|\#[a-zA-Z\-]{3,})/i
@@ -127,12 +129,13 @@ describe GoldenRetriever::Document do
 	end
 
 	it "should allow custom conversion classes with side effects" do
+
 		get_language_conversion=Class.new {
 			def initialize(options)
 				@percentage=options[:percentage].to_f/100
 			end
 
-			def convert(text, instance)
+			def convert(text, instance, text_source)
 				# first detect the language
 				english_letters=text.downcase.count("a-z").to_f/text.length
 				if english_letters>@percentage
@@ -144,6 +147,7 @@ describe GoldenRetriever::Document do
 				text.tr("прстклоеПРСТКЛОЕ", "prstkloePRSTKLOE")
 			end
 		}
+
 		@article_class_custom_conversion=@article_class.clone
 		@article_class_custom_conversion.class_exec{
 			word_token /([a-zA-Z\-а-яА-Я]{3,})/i
@@ -161,6 +165,28 @@ describe GoldenRetriever::Document do
 	end
 
 	it "should provide URLs removing conversion" do
+
+				@get_hashtags_filter=Class.new {
+			def initialize(options)
+
+			end
+
+			def filter(words, instance, words_source)
+				new_text=[]
+				hashtags=[]
+				words.each { |word|
+					
+					if word.start_with?("#")
+						hashtags<<word[1..-1]
+					else
+						new_text<<word
+					end
+				}
+				instance.hashtags=hashtags
+				new_text
+			end
+		}
+
 		@article_class_remove_url=@article_class.clone
 		@article_class_remove_url.class_exec{
 			conversion :remove_hyperlinks
@@ -168,5 +194,10 @@ describe GoldenRetriever::Document do
 		d=@article_class_remove_url.from_source(:text => "http://google.ru word")
 		d.text.should eql(["word"])
 	end
+
+	it "should provide text source to all filters" do
+		puts @get_hashtags_filter
+	end
+
 
 end

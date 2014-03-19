@@ -22,18 +22,18 @@ module GoldenRetriever
 				field (field_name+"_weights").to_sym, type: Hash
 
 				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
-					self.send("#{field_name}=".to_sym, filter_text(tokenize(prepare_text(str))).map{|w| stem(w)}) 
+					self.send("#{field_name}=".to_sym, filter_words(tokenize(prepare_text(str))).map{|w| stem(w)}) 
 					super(str)
 				}
 			}
 		end
 
-		def filter_text(text)
-			self.class.filter_text(text, self)
+		def filter_words(text)
+			self.class.filter_words(text, self)
 		end
 
-		def self.filter_text(text, instance)
-			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance)}
+		def self.filter_words(text, instance)
+			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance, text)}
 		end
 
 		def self.id_field
@@ -68,7 +68,7 @@ module GoldenRetriever
 		end
 
 		def self.prepare_text(str, instance)
-			@__conversions.nil? ? str : @__conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance)}
+			@__conversions.nil? ? str : @__conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance, str)}
 		end
 
 		def self.word_token(regex)
@@ -110,7 +110,7 @@ module GoldenRetriever
 			elsif type.is_a?(Class)
 				conversion_class=type
 			end
-			
+
 			@__conversions||=[]
 			@__conversions<<conversion_class.new(options)
 		end
