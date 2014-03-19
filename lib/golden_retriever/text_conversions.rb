@@ -24,7 +24,7 @@ module GoldenRetriever
 
 			def convert(text, instance=nil, text_source=nil)
 				text=@use_source ? text_source : text				
-				return text.gsub(URI.regexp,'')
+				return text.gsub(URI.regexp(['http']),'')
 			end
 		end
 	end
