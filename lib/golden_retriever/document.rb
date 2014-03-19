@@ -29,11 +29,11 @@ module GoldenRetriever
 		end
 
 		def filter_text(text)
-			self.class.filter_text(text)
+			self.class.filter_text(text, self)
 		end
 
-		def self.filter_text(text)
-			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo)}
+		def self.filter_text(text, instance)
+			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance)}
 		end
 
 		def self.id_field
@@ -64,11 +64,11 @@ module GoldenRetriever
 		end
 
 		def prepare_text(str)
-			self.class.prepare_text(str)
+			self.class.prepare_text(str,self)
 		end
 
-		def self.prepare_text(str)
-			@__conversions.nil? ? str : @__conversions.reduce(str){|memo,obj| memo=obj.convert(memo)}
+		def self.prepare_text(str, instance)
+			@__conversions.nil? ? str : @__conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance)}
 		end
 
 		def self.word_token(regex)
@@ -93,14 +93,24 @@ module GoldenRetriever
 			end
 		end
 
-		def self.filter(type, options={})
-			filter_class="GoldenRetriever::TextFilters::#{type.to_s.camelize}".constantize			
+		def self.filter(type, options={})			
+			if type.is_a?(Symbol) 
+				filter_class="GoldenRetriever::TextFilters::#{type.to_s.camelize}".constantize			
+			elsif type.is_a?(Class)
+				filter_class=type
+			end
+
 			@__filters||=[]
 			@__filters<<filter_class.new(options)
 		end
 
 		def self.conversion(type, options={})
-			conversion_class="GoldenRetriever::TextConversions::#{type.to_s.camelize}".constantize
+			if type.is_a?(Symbol) 
+				conversion_class="GoldenRetriever::TextConversions::#{type.to_s.camelize}".constantize
+			elsif type.is_a?(Class)
+				conversion_class=type
+			end
+			
 			@__conversions||=[]
 			@__conversions<<conversion_class.new(options)
 		end

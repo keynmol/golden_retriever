@@ -92,4 +92,81 @@ describe GoldenRetriever::Document do
 		d.text.should_not include("a","you","is","of")
 		d.text.should include("glimpse","compassion","from","want","What")
 	end
+
+	it "should allow custom filtering classes with side effects" do
+		get_hashtags_filter=Class.new {
+			def initialize(options)
+
+			end
+
+			def filter(text, instance)
+				new_text=[]
+				hashtags=[]
+				text.each { |word|
+					
+					if word.start_with?("#")
+						hashtags<<word[1..-1]
+					else
+						new_text<<word
+					end
+				}
+				instance.hashtags=hashtags
+				new_text
+			end
+		}
+		@article_class_custom_filter=@article_class.clone
+		@article_class_custom_filter.class_exec{
+			word_token /([a-zA-Z\-]{3,}|\#[a-zA-Z\-]{3,})/i
+			filter get_hashtags_filter
+			field :hashtags
+		}
+
+		d=@article_class_custom_filter.from_source(:text => "Regular text but with #hashtags")
+		d.text.should_not include("hashtags")
+		d.hashtags.should eql(["hashtags"])
+	end
+
+	it "should allow custom conversion classes with side effects" do
+		get_language_conversion=Class.new {
+			def initialize(options)
+				@percentage=options[:percentage].to_f/100
+			end
+
+			def convert(text, instance)
+				# first detect the language
+				english_letters=text.downcase.count("a-z").to_f/text.length
+				if english_letters>@percentage
+					instance.language=:en
+				else
+					instance.language=:ru
+				end
+		
+				text.tr("прстклоеПРСТКЛОЕ", "prstkloePRSTKLOE")
+			end
+		}
+		@article_class_custom_conversion=@article_class.clone
+		@article_class_custom_conversion.class_exec{
+			word_token /([a-zA-Z\-а-яА-Я]{3,})/i
+			conversion get_language_conversion, :percentage => 50
+			field :language
+		}
+
+		english_document=@article_class_custom_conversion.from_source(:text => "Regular text in english")
+		english_document.language.should eql(:en)
+
+		russian_document=@article_class_custom_conversion.from_source(:text => "Просто стекло")
+		russian_document.language.should eql(:ru)
+		russian_document.text.should_not include("стекло", "Просто")
+
+	end
+
+	it "should provide URLs removing conversion" do
+		@article_class_remove_url=@article_class.clone
+		@article_class_remove_url.class_exec{
+			conversion :remove_hyperlinks
+		}
+		d=@article_class_remove_url.from_source(:text => "http://google.ru word")
+		d.text.should eql(["word"])
+	end
+
 end
