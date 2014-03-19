@@ -37,6 +37,10 @@ module GoldenRetriever
 			super.constantize
 		end
 
+		def search(terms)
+			document_ids=[]
+		end
+
 		def add_document(document)
 			id=document.id
 			document_words=document.words
@@ -51,7 +55,7 @@ module GoldenRetriever
 
 
 			missing_words.each {|word|
-				w=word_class.create(:lemm => word, :__collection_id => self._id, :documents=>[id], :count=>1)
+				w=word_class.create(:lemm => word, :__collection_id => self._id, :documents=>[id], :documents_weights=>{id.to_s=>1.0}, :count=>1)
 				w.save
 			}
 
@@ -117,6 +121,11 @@ module GoldenRetriever
 									.map {|w, attrs| 
 										weights[w]=weighting_merging.call(Hash[attrs.zip(attrs.collect {|attr| partial_weights[attr][w]})])}
 				end
+
+				d_words.each {|word|
+					word.documents_weights[document.id.to_s]=weights[word.lemm]
+					word.save
+				}
 
 				document.weights=weights
 				document.save 

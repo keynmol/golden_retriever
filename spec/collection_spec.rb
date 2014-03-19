@@ -67,4 +67,15 @@ describe GoldenRetriever::Collection do
 		@document_3.weights.keys.should =~ @document_3.words
 	end
 
+	it "should maintain weights of terms in documents" do
+		@document_2.reload
+		k={}
+		@collection.words.map{|w| k[w.lemm]=w.documents_weights}
+		saved_weights=Hash[@document_2.words.collect {|lemm| [lemm,k[lemm][@document_2.id.to_s]]}]
+
+		saved_weights.should eql(@document_2.weights)
+
+
+	end
+
 end

@@ -10,6 +10,7 @@ module GoldenRetriever
 		field :__collection_id, type: String
 
 		field :lemm, type: String
+		field :documents_weights, type: Hash, default: {}
 
 		
 	end
