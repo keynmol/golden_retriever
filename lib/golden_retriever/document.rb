@@ -22,10 +22,18 @@ module GoldenRetriever
 				field (field_name+"_weights").to_sym, type: Hash
 
 				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
-					self.send("#{field_name}=".to_sym, tokenize(prepare_text(str)).map{|w| stem(w)}) 
+					self.send("#{field_name}=".to_sym, filter_text(tokenize(prepare_text(str))).map{|w| stem(w)}) 
 					super(str)
 				}
 			}
+		end
+
+		def filter_text(text)
+			self.class.filter_text(text)
+		end
+
+		def self.filter_text(text)
+			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo)}
 		end
 
 		def self.id_field
@@ -34,6 +42,10 @@ module GoldenRetriever
 
 		def id
 			_id
+		end
+
+		def self.stopwords(list)
+
 		end
 
 		def self.stem(word)
@@ -81,11 +93,18 @@ module GoldenRetriever
 			end
 		end
 
+		def self.filter(type, options={})
+			filter_class="GoldenRetriever::TextFilters::#{type.to_s.camelize}".constantize			
+			@__filters||=[]
+			@__filters<<filter_class.new(options)
+		end
+
 		def self.conversion(type, options={})
 			conversion_class="GoldenRetriever::TextConversions::#{type.to_s.camelize}".constantize
 			@__conversions||=[]
 			@__conversions<<conversion_class.new(options)
 		end
+
 
 		def words
 			self.class.textual_attributes.reduce([]){|memo, obj| 

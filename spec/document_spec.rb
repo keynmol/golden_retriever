@@ -82,4 +82,14 @@ describe GoldenRetriever::Document do
 		d.should respond_to :title_source
 
 	end
+
+	it "should filter words according to specified stopwords list" do
+		@article_class_stopwords=@article_class.clone
+		@article_class_stopwords.class_exec {
+			filter :stopwords, list: ["a", "you","is", "of"]
+		}
+		d=@article_class_stopwords.from_source(:text=>"What we want from you is a glimpse of compassion")		
+		d.text.should_not include("a","you","is","of")
+		d.text.should include("glimpse","compassion","from","want","What")
+	end
 end
