@@ -103,12 +103,12 @@ describe GoldenRetriever::Document do
 			def filter(words, instance, words_source)
 				new_text=[]
 				hashtags=[]
-				words.each { |word|
+				words_source.each_with_index { |word,i|
 					
 					if word.start_with?("#")
 						hashtags<<word[1..-1]
 					else
-						new_text<<word
+						new_text<<words[i]
 					end
 				}
 				instance.hashtags=hashtags
@@ -119,13 +119,14 @@ describe GoldenRetriever::Document do
 		@article_class_custom_filter=@article_class.clone
 		@article_class_custom_filter.class_exec{
 			word_token /([a-zA-Z\-]{3,}|\#[a-zA-Z\-]{3,})/i
+			conversion :change_case, :direction => :down
 			filter get_hashtags_filter
 			field :hashtags
 		}
 
-		d=@article_class_custom_filter.from_source(:text => "Regular text but with #hashtags")
-		d.text.should_not include("hashtags")
-		d.hashtags.should eql(["hashtags"])
+		d=@article_class_custom_filter.from_source(:text => "Regular text but with #Hashtags")
+		d.text.should_not include("hashtags", "Hashtags")
+		d.hashtags.should eql(["Hashtags"])
 	end
 
 	it "should allow custom conversion classes with side effects" do
@@ -165,27 +166,6 @@ describe GoldenRetriever::Document do
 	end
 
 	it "should provide URLs removing conversion" do
-
-				@get_hashtags_filter=Class.new {
-			def initialize(options)
-
-			end
-
-			def filter(words, instance, words_source)
-				new_text=[]
-				hashtags=[]
-				words.each { |word|
-					
-					if word.start_with?("#")
-						hashtags<<word[1..-1]
-					else
-						new_text<<word
-					end
-				}
-				instance.hashtags=hashtags
-				new_text
-			end
-		}
 
 		@article_class_remove_url=@article_class.clone
 		@article_class_remove_url.class_exec{

@@ -22,18 +22,30 @@ module GoldenRetriever
 				field (field_name+"_weights").to_sym, type: Hash
 
 				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
-					self.send("#{field_name}=".to_sym, filter_words(tokenize(prepare_text(str))).map{|w| stem(w)}) 
+					prepared_source=prepare_source(str)
+					tokenized_source=tokenize(prepared_source)
+
+					converted_tokenized_text=tokenize(prepare_text(prepared_source))
+					self.send("#{field_name}=".to_sym, filter_words(converted_tokenized_text, tokenized_source).map{|w| stem(w)}) 
 					super(str)
 				}
 			}
 		end
-
-		def filter_words(text)
-			self.class.filter_words(text, self)
+		
+		def prepare_source(text)
+			self.class.prepare_source(text,self)
 		end
 
-		def self.filter_words(text, instance)
-			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance, text)}
+		def self.prepare_source(str, instance)
+			@__preliminary_conversions.nil? ? str : @__preliminary_conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance, str)}
+		end
+
+		def filter_words(text,prepared_source)
+			self.class.filter_words(text, self,prepared_source)
+		end
+
+		def self.filter_words(text, instance, prepared_source)
+			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance, prepared_source)}
 		end
 
 		def self.id_field
@@ -112,7 +124,10 @@ module GoldenRetriever
 			end
 
 			@__conversions||=[]
+			@__preliminary_conversions||=[]
 			@__conversions<<conversion_class.new(options)
+			
+			@__preliminary_conversions<<conversion_class.new(options) if options[:preliminary]
 		end
 
 
