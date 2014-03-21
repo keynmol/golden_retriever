@@ -131,7 +131,7 @@ describe GoldenRetriever::Document do
 
 	it "should allow custom conversion classes with side effects" do
 
-		get_language_conversion=Class.new {
+		transliterate_conversion=Class.new {
 			def initialize(options)
 				@percentage=options[:percentage].to_f/100
 			end
@@ -152,13 +152,14 @@ describe GoldenRetriever::Document do
 		@article_class_custom_conversion=@article_class.clone
 		@article_class_custom_conversion.class_exec{
 			word_token /([a-zA-Z\-а-яА-Я]{3,})/i
-			conversion get_language_conversion, :percentage => 50
+			conversion transliterate_conversion, :percentage => 50
 			field :language
 		}
 
 		english_document=@article_class_custom_conversion.from_source(:text => "Regular text in english")
 		english_document.language.should eql(:en)
 
+		# document in russian that we expect to be transliterated after applying conversion
 		russian_document=@article_class_custom_conversion.from_source(:text => "Просто стекло")
 		russian_document.language.should eql(:ru)
 		russian_document.text.should_not include("стекло", "Просто")
@@ -174,10 +175,5 @@ describe GoldenRetriever::Document do
 		d=@article_class_remove_url.from_source(:text => "http://google.ru word")
 		d.text.should eql(["word"])
 	end
-
-	it "should provide text source to all filters" do
-		puts @get_hashtags_filter
-	end
-
 
 end

@@ -22,27 +22,31 @@ module GoldenRetriever
 				field (field_name+"_weights").to_sym, type: Hash
 
 				self.send(:define_method, (field_name+"_source=").to_sym) {|str|
-					prepared_source=prepare_source(str)
-					tokenized_source=tokenize(prepared_source)
-
-					converted_tokenized_text=tokenize(prepare_text(prepared_source))
-					self.send("#{field_name}=".to_sym, filter_words(converted_tokenized_text, tokenized_source).map{|w| stem(w)}) 
+					self.send("#{field_name}=".to_sym, self.class.bag_of_words(str,self)) 
 					super(str)
 				}
 			}
 		end
-		
-		def prepare_source(text)
-			self.class.prepare_source(text,self)
+
+		def self.bag_of_words(str,instance=nil)
+			prepared_source=prepare_source(str,instance)
+			tokenized_source=tokenize(prepared_source)
+
+			converted_tokenized_text=tokenize(prepare_text(prepared_source,instance))
+			filter_words(converted_tokenized_text, instance, tokenized_source).map{|w| stem(w)}
 		end
+		
+		# def prepare_source(text)
+		# 	self.class.prepare_source(text,self)
+		# end
 
 		def self.prepare_source(str, instance)
 			@__preliminary_conversions.nil? ? str : @__preliminary_conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance, str)}
 		end
 
-		def filter_words(text,prepared_source)
-			self.class.filter_words(text, self,prepared_source)
-		end
+		# def filter_words(text,prepared_source)
+		# 	self.class.filter_words(text, self,prepared_source)
+		# end
 
 		def self.filter_words(text, instance, prepared_source)
 			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance, prepared_source)}
@@ -54,10 +58,6 @@ module GoldenRetriever
 
 		def id
 			_id
-		end
-
-		def self.stopwords(list)
-
 		end
 
 		def self.stem(word)

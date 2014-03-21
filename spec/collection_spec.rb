@@ -78,4 +78,9 @@ describe GoldenRetriever::Collection do
 
 	end
 
+	it "should provide simple search functionality" do
+		rankings=@collection.search("word test")
+
+	end
+
 end

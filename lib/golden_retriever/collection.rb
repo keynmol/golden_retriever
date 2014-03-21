@@ -37,8 +37,32 @@ module GoldenRetriever
 			super.constantize
 		end
 
-		def search(terms)
-			document_ids=[]
+		def search(query)
+			result_set=nil
+			terms=document_class.bag_of_words(query)
+			freqs=Hash[words.in(:lemm=>terms).map{|w| 					
+					[w.lemm, w.count]
+				}
+			]
+			
+			query_document=weight_terms(terms,freqs)
+			query_norm=GoldenRetriever::Tools.norm(query_document)
+			
+			words.in(:lemm=>terms).each{|w|
+				if result_set==nil
+						result_set=Hash[w.documents_weights.map{|k,v| [k,[v]]}]
+					else
+						common=result_set.keys & w.documents_weights.keys
+						return {} if common.empty?
+						old_result_set=result_set.clone
+						result_set=Hash.new {|h,k| h[k]=[]}
+						common.each {|d|
+							result_set[d]=old_result_set[d]+[w.documents_weights[d]*query_document[w.lemm]]
+						}
+					end
+			}
+			rankings=Hash[result_set.map{|id, dot| [id,dot.inject(:+)/query_norm]}]
+
 		end
 
 		def add_document(document)
@@ -91,7 +115,13 @@ module GoldenRetriever
 			docset_class.where(:__collection_id => self._id)
 		end
 
+		def weight_terms(terms, freqs)
+			weighting.weight(terms, freqs, documents.count)
+		end
+
 		def rehash
+			done=0.0
+			sz=documents.count
 			documents.each {|document|
 
 				d_words=self.words.in(:lemm => document.words)
@@ -129,6 +159,8 @@ module GoldenRetriever
 
 				document.weights=weights
 				document.save 
+				done+=1
+				yield 100*done/sz if block_given?
 			}
 		end
 
@@ -166,6 +198,12 @@ module GoldenRetriever
 				raise Exception
 			end
 
+		end
+
+		def cascade_delete
+			self.words.delete
+			self.documents.delete
+			self.delete
 		end
 
 
