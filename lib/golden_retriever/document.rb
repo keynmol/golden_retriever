@@ -33,20 +33,16 @@ module GoldenRetriever
 			tokenized_source=tokenize(prepared_source)
 
 			converted_tokenized_text=tokenize(prepare_text(prepared_source,instance))
-			filter_words(converted_tokenized_text, instance, tokenized_source).map{|w| stem(w)}
+			stem_list(filter_words(converted_tokenized_text, instance, tokenized_source))
 		end
-		
-		# def prepare_source(text)
-		# 	self.class.prepare_source(text,self)
-		# end
+
+		def self.stem_list(words)
+			words.map{|w| stem(w)}
+		end
 
 		def self.prepare_source(str, instance)
 			@__preliminary_conversions.nil? ? str : @__preliminary_conversions.reduce(str){|memo,obj| memo=obj.convert(memo, instance, str)}
 		end
-
-		# def filter_words(text,prepared_source)
-		# 	self.class.filter_words(text, self,prepared_source)
-		# end
 
 		def self.filter_words(text, instance, prepared_source)
 			@__filters.nil? ? text : @__filters.reduce(text){|memo,obj| memo=obj.filter(memo, instance, prepared_source)}

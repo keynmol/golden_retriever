@@ -45,9 +45,11 @@ module GoldenRetriever
 				}
 			]
 			
+			return {} if freqs.empty?
+
 			query_document=weight_terms(terms,freqs)
 			query_norm=GoldenRetriever::Tools.norm(query_document)
-			
+
 			words.in(:lemm=>terms).each{|w|
 				if result_set==nil
 						result_set=Hash[w.documents_weights.map{|k,v| [k,[v]]}]
@@ -61,6 +63,7 @@ module GoldenRetriever
 						}
 					end
 			}
+			return {} if result_set.empty?
 			rankings=Hash[result_set.map{|id, dot| [id,dot.inject(:+)/query_norm]}]
 
 		end
