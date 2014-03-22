@@ -14,7 +14,7 @@ module Articles
 		textual :text, :title
 		field :published, type: DateTime
 		field :authority, type: Integer
-		word_token /([a-zA-Z\-]{3,})/i
+		word_token /[a-zA-Z\-]{3,}/i
 		stemming :porter, language: "en"		
 		conversion :change_case
 	end

@@ -5,8 +5,12 @@ module GoldenRetriever
 				@regex=regex
 			end
 
+			def regex
+				@regex
+			end
+
 			def tokenize(text)
-				text.scan(@regex).flatten
+				text.scan(/(#{@regex})/).flatten
 			end
 		end
 	end

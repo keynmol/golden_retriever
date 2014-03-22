@@ -28,6 +28,10 @@ module GoldenRetriever
 			}
 		end
 
+		def self.safe_text(str)
+			prepare_text(prepare_source(str))
+		end
+
 		def self.bag_of_words(str,instance=nil)
 			prepared_source=prepare_source(str,instance)
 			tokenized_source=tokenize(prepared_source)
@@ -81,6 +85,10 @@ module GoldenRetriever
 
 		def self.word_token(regex)
 			@__tokenizer=Tokenizers::RegexTokenizer.new(regex)
+		end
+
+		def self.tokenizer
+			@__tokenizer
 		end
 
 		def self.from_source(values)

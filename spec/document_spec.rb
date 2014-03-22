@@ -5,7 +5,7 @@ describe GoldenRetriever::Document do
 		@article_class = Class.new(GoldenRetriever::Document) do
 			textual :text, :title
 
-			word_token /([a-zA-Z\-]{3,})/i
+			word_token /[a-zA-Z\-]{3,}/i
 		end
 
 		@source_text = "A text for testing, no more lorem ipsum bullcrap."
@@ -37,7 +37,7 @@ describe GoldenRetriever::Document do
 
 		@article_class_downcased.class_exec {
 			conversion :change_case, :direction => :down
-			word_token /([а-яА-Я\-]{3,})/i
+			word_token /[а-яА-Я\-]{3,}/i
 		}
 
 		d=@article_class_downcased.from_source(:text => "ТесТОВый теКст С Разными РегиСТРАМИ")
@@ -61,7 +61,7 @@ describe GoldenRetriever::Document do
 
 		@article_class_stemmed.class_exec {
 			stemming :porter, language: "ru"
-			word_token /([а-яА-Я\-]{3,})/i
+			word_token /[а-яА-Я\-]{3,}/i
 
 		}
 		d=@article_class_stemmed.from_source(:text=>"слова русского языка с трудом поддаются стеммингу")
@@ -118,7 +118,7 @@ describe GoldenRetriever::Document do
 
 		@article_class_custom_filter=@article_class.clone
 		@article_class_custom_filter.class_exec{
-			word_token /([a-zA-Z\-]{3,}|\#[a-zA-Z\-]{3,})/i
+			word_token /[a-zA-Z\-]{3,}|\#[a-zA-Z\-]{3,}/i
 			conversion :change_case, :direction => :down
 			filter get_hashtags_filter
 			field :hashtags
@@ -151,7 +151,7 @@ describe GoldenRetriever::Document do
 
 		@article_class_custom_conversion=@article_class.clone
 		@article_class_custom_conversion.class_exec{
-			word_token /([a-zA-Z\-а-яА-Я]{3,})/i
+			word_token /[a-zA-Z\-а-яА-Я]{3,}/i
 			conversion transliterate_conversion, :percentage => 50
 			field :language
 		}

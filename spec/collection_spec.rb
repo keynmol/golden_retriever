@@ -79,7 +79,20 @@ describe GoldenRetriever::Collection do
 	end
 
 	it "should provide simple search functionality" do
-		rankings=@collection.search("word test")
+		@document_4=@collection.create_document(:title=>"No word", :text => "nothing really")
+		@collection.rehash
+
+		only_positive=@collection.search("+word +test")
+		only_positive.keys.should eql([@document_1.id.to_s])
+		
+		with_optional=@collection.search("+title word maintenance")
+		with_optional.keys.should eql([@document_1.id, @document_2.id].map(&:to_s))
+
+		only_optional=@collection.search("word maintenance")
+		only_optional.keys.should eql([@document_1.id, @document_2.id, @document_4.id].map(&:to_s))
+
+		with_negation=@collection.search("word maintenance !title")
+		with_negation.keys.should eql([@document_4.id].map(&:to_s))
 
 	end
 
